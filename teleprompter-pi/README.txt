@@ -1,43 +1,57 @@
 =====================================================
-  TELEPROMPTER — Raspberry Pi Kiosk Setup Guide
-  v2.0
+  TELEPROMPTER — Raspberry Pi Setup Guide
+  v3.0
 =====================================================
 
   Organization : The Catholic Archdiocese of Edmonton
   Department   : Communications
   Platform     : Raspberry Pi OS Desktop / Internet Explorer (Surface RT)
 
+  This version:
+    ✓ Opens Chromium as a normal maximized window
+    ✓ Does NOT use kiosk mode
+    ✓ Does NOT start automatically on boot
+    ✓ Fullscreen is controlled inside the app itself
+    ✓ Open by double-clicking the Desktop icon
+
 
 =====================================================
   VERSION HISTORY
 =====================================================
 
+  v3.0.0  2026-06-17
+    - Removed kiosk mode entirely; Chromium now
+      opens as a normal maximized window
+    - Removed autostart on boot — app must be
+      opened manually via the Desktop icon
+    - install.sh actively removes any leftover
+      autostart entry from previous installs
+    - Installer reduced from 7 steps to 6 steps
+    - uninstall.sh labels legacy autostart entries
+      and removes them cleanly
+    - README fully rewritten for v3.0 behavior
+
+  v2.1.0  2026-06-17
+    - Added TELEPROMPTER_MODE setting (windowed/kiosk)
+    - Default changed from --kiosk to --start-maximized
+    - Desktop, App Menu, and Autostart all used same mode
+
   v2.0.0  2026-06-17
-    - Desktop launcher created at ~/Desktop/Teleprompter.desktop
-    - App Menu entry created at ~/.local/share/applications/
-    - SVG icon shipped with installer (teleprompter-icon.svg)
-    - Icon embedded as fallback directly in install.sh
-    - Automatic gio trust-marking for Bookworm compatibility
-    - Structured 7-step install output with clear labels
-    - Autostart, Desktop, and App Menu all use same kiosk flags
-    - Uninstaller updated to remove all four shortcut locations
-    - Kiosk flag added: --check-for-update-interval=31536000
-    - README fully rewritten to match v2.0 workflow
+    - Desktop launcher ~/Desktop/Teleprompter.desktop
+    - App Menu entry ~/.local/share/applications/
+    - SVG icon shipped with installer
+    - Automatic gio trust-marking
+    - Structured 7-step install output
 
   v1.2.0  2026-06-17
-    - Added startup splash screen with CAEDM branding
-      (burgundy #860038, 2.5 s auto-dismiss, Skip button,
-      CSS fade with graceful IE fallback)
-    - Added dedicated "Exit Fullscreen" button to top bar
-      (all vendor prefixes: exitFullscreen, msExitFullscreen,
-      webkitExitFullscreen, mozCancelFullScreen)
-    - "Fullscreen is not active" status message on misfire
+    - Startup splash screen with CAEDM branding
+    - Dedicated Exit Fullscreen button added
+    - CSS fade with graceful IE fallback
 
   v1.1.0  2026-06-17
-    - Added Raspberry Pi kiosk installer package
+    - Initial Raspberry Pi kiosk installer package
     - Chromium autostart via .desktop entry
     - Mouse cursor hiding via unclutter
-    - Supports both chromium and chromium-browser commands
 
   v1.0.0  2026-06-17
     - Initial release — single-file offline teleprompter
@@ -58,10 +72,6 @@
   Email   : ruban.peppin@caedm.ca
             connect@rubangino.ca
 
-  This project was designed and developed by
-  Ruban Peppin for internal use by the Communications
-  department of the Catholic Archdiocese of Edmonton.
-
   For bug reports, feature requests, or support,
   contact the developer at either email address above.
 
@@ -72,8 +82,8 @@ FOLDER CONTENTS
 
   teleprompter.html        The teleprompter web app (v1.2)
   teleprompter-icon.svg    Application icon (dark, burgundy accent)
-  install.sh               Raspberry Pi installer (v2.0)
-  uninstall.sh             Raspberry Pi uninstaller (v2.0)
+  install.sh               Raspberry Pi installer (v3.0)
+  uninstall.sh             Raspberry Pi uninstaller (v3.0)
   README.txt               This file
 
 
@@ -81,29 +91,44 @@ FOLDER CONTENTS
 WHAT THE INSTALLER CREATES
 -----------------------------------------------------
 
-  After running install.sh, three shortcuts are made:
+  1. ~/teleprompter/
+     App files, icon, and script stored here.
 
-  1. Desktop launcher
-     ~/Desktop/Teleprompter.desktop
-     Double-click this icon to open the teleprompter
-     in a fullscreen Chromium kiosk window at any time.
+  2. ~/Desktop/Teleprompter.desktop
+     Desktop icon — double-click to open the app.
 
-  2. Application Menu entry
-     ~/.local/share/applications/teleprompter.desktop
-     The Teleprompter appears in the Raspberry Pi
-     application menu under Utilities / Office.
+  3. ~/.local/share/applications/teleprompter.desktop
+     Adds Teleprompter to the Application Menu
+     (under Utilities / Office).
 
-  3. Autostart entry  (runs on every boot/login)
-     ~/.config/autostart/teleprompter.desktop
-     Chromium launches automatically 5 seconds after
-     the desktop finishes loading.
+  The app does NOT start automatically on boot.
+  Open it manually by double-clicking the Desktop icon.
 
-  All three shortcuts share the same kiosk flags:
-    --kiosk
-    --disable-infobars
-    --noerrdialogs
-    --disable-session-crashed-bubble
-    --check-for-update-interval=31536000
+
+-----------------------------------------------------
+HOW FULLSCREEN WORKS
+-----------------------------------------------------
+
+  This installer does NOT use Chromium's --kiosk flag.
+  Chromium opens as a normal maximized window.
+
+  Fullscreen is controlled entirely from inside
+  the Teleprompter app using the on-screen buttons:
+
+  ┌─────────────────────────────────────────────────┐
+  │  [ ⛶ Full ]   → Enter fullscreen (or press F)  │
+  │  [ ✕ Exit FS ] → Exit fullscreen                │
+  └─────────────────────────────────────────────────┘
+
+  The user can also press F11 in Chromium at any time
+  to toggle the browser's own fullscreen mode.
+
+  Keyboard shortcuts inside the app:
+    F       Enter fullscreen
+    H       Hide / show controls (focus mode)
+    Space   Start / Pause scrolling
+    R       Reset to top
+    M       Mirror mode
 
 
 -----------------------------------------------------
@@ -111,8 +136,7 @@ STEP 1 — COPY THIS FOLDER TO YOUR RASPBERRY PI
 -----------------------------------------------------
 
 Option A: USB drive
-  1. Copy the entire teleprompter-pi folder to a USB
-     drive on your Windows computer.
+  1. Copy the teleprompter-pi folder to a USB drive.
   2. Plug the USB drive into the Raspberry Pi.
   3. Open a terminal and run:
 
@@ -123,7 +147,7 @@ Option B: SCP over the network (from another computer)
 
      scp -r teleprompter-pi pi@PI_IP:~/
 
-Option C: GitHub (if the repo is public)
+Option C: Git clone (if the repo is accessible)
      git clone https://github.com/archedmonton/Teleprompter.git
      cd Teleprompter/teleprompter-pi
 
@@ -142,15 +166,15 @@ STEP 3 — RUN THE INSTALLER
 
   ./install.sh
 
-The installer will print numbered steps as it runs:
+The installer will print 6 numbered steps:
 
-  [1/7] Create ~/teleprompter/ directory
-  [2/7] Copy teleprompter.html
-  [3/7] Install SVG icon
-  [4/7] Detect / install Chromium
-  [5/7] Install unclutter (mouse hider)
-  [6/7] Create Desktop launcher
-  [7/7] Create App Menu and Autostart entries
+  [1/6] Create ~/teleprompter/ directory
+  [2/6] Copy teleprompter.html
+  [3/6] Install SVG icon
+  [4/6] Detect / install Chromium
+  [5/6] Install unclutter (mouse hider, optional)
+  [6/6] Create Desktop icon + App Menu entry
+        Remove any old autostart entries (cleanup)
 
 
 -----------------------------------------------------
@@ -158,76 +182,47 @@ STEP 4 — TRUST THE DESKTOP ICON (if prompted)
 -----------------------------------------------------
 
 Raspberry Pi OS Bookworm may show the desktop icon
-as untrusted. The installer attempts to mark it
-trusted automatically using the "gio" tool.
+as untrusted. The installer automatically tries to
+trust it using the "gio" tool.
 
-If the icon still shows a warning or won't launch:
+If the icon shows a warning or won't open:
 
-  a) Right-click the icon on the Desktop.
+  a) Right-click the Desktop icon.
   b) Choose "Allow Launching" or "Trust this executable".
-  c) The icon should now open normally.
+  c) Double-click to open — it should work now.
 
 This is a one-time step per installation.
 
 
 -----------------------------------------------------
-STEP 5 — REBOOT
------------------------------------------------------
-
-  sudo reboot
-
-After rebooting:
-  ✓ The Teleprompter desktop icon is available.
-  ✓ Chromium opens automatically in kiosk mode.
-
-
------------------------------------------------------
-OPENING THE APP MANUALLY (without reboot)
+OPENING THE APP
 -----------------------------------------------------
 
 Option A: Double-click the Desktop icon.
 
-Option B: Find "Teleprompter" in the Application Menu
-          under Utilities or Office.
+Option B: Application Menu → Utilities → Teleprompter
 
-Option C: From a terminal:
-  chromium-browser --kiosk "file://$HOME/teleprompter/teleprompter.html"
+Option C: Terminal command:
+  chromium-browser --start-maximized \
+    "file://$HOME/teleprompter/teleprompter.html"
 
+  (Use "chromium" instead of "chromium-browser"
+   on newer Raspberry Pi OS versions.)
 
------------------------------------------------------
-DISABLING AUTOSTART (keeping the Desktop icon)
------------------------------------------------------
-
-If you do not want the app to open automatically
-on every boot, remove only the autostart entry:
-
-  rm ~/.config/autostart/teleprompter.desktop
-
-The Desktop icon and App Menu entry will still work
-for manual launch. No reboot required.
+The app does NOT start automatically on boot.
 
 
 -----------------------------------------------------
-KEYBOARD SHORTCUTS (while using the teleprompter)
+USING THE TELEPROMPTER
 -----------------------------------------------------
 
-  Space         Start / Pause scrolling
-  R             Reset to top
-  Up / Down     Speed up / slow down
-  Left / Right  Font size smaller / larger
-  M             Toggle mirror mode
-  H             Hide / show controls (focus mode)
-  F             Enter fullscreen
-
-
------------------------------------------------------
-EXITING KIOSK MODE (for maintenance)
------------------------------------------------------
-
-  Alt+F4        Close the Chromium kiosk window
-  Ctrl+Alt+T    Open a terminal, then:
-                  pkill chromium
-                  pkill chromium-browser
+  1. Edit or paste your script in the text editor area.
+  2. Press "Load Script into Prompter".
+  3. Press Start (or Space) to begin scrolling.
+  4. Use the Full button (or F key) to go fullscreen.
+  5. Use Exit FS to return to windowed mode.
+  6. Press H to hide controls for a clean reading view.
+  7. Press R to reset to the top.
 
 
 -----------------------------------------------------
@@ -238,10 +233,8 @@ Copy the new file over the existing one:
 
   cp /path/to/new/teleprompter.html ~/teleprompter/
 
-No reboot is required.
-Refresh Chromium with F5, or restart it:
-
-  pkill chromium-browser
+No reboot required. Close and reopen the app, or
+press Ctrl+R in Chromium to refresh.
 
 From another machine via scp:
 
@@ -257,16 +250,12 @@ HOW TO UNINSTALL
 
 This removes:
   ✓ ~/teleprompter/                           (app + icon)
-  ✓ ~/.config/autostart/teleprompter.desktop  (autostart)
-  ✓ ~/.config/autostart/unclutter.desktop     (if present)
   ✓ ~/Desktop/Teleprompter.desktop            (desktop icon)
   ✓ ~/.local/share/applications/teleprompter.desktop
+  ✓ ~/.config/autostart/teleprompter.desktop  (if present)
+  ✓ ~/.config/autostart/unclutter.desktop     (if present)
 
 Chromium is NOT removed.
-
-Then reboot to confirm autostart is cleared:
-
-  sudo reboot
 
 
 -----------------------------------------------------
@@ -274,38 +263,33 @@ TROUBLESHOOTING
 -----------------------------------------------------
 
 Q: The desktop icon does not appear after install.
-A: Refresh the desktop. Right-click the desktop and
-   choose "Refresh Desktop" or log out and back in.
+A: Refresh the desktop (right-click → Refresh) or
+   log out and back in.
    Check: ls ~/Desktop/
 
-Q: Double-clicking the icon does nothing or shows
-   a warning dialog.
+Q: Double-clicking the icon does nothing.
 A: Right-click the icon → "Allow Launching" or
    "Trust this executable". See Step 4 above.
 
-Q: The teleprompter does not open on boot.
-A: Autostart requires a graphical desktop session.
-   Headless/console boots will not trigger it.
-   Check: ls ~/.config/autostart/
+Q: The app opens but exits fullscreen immediately.
+A: This is expected — the app is not in kiosk mode.
+   Use the Full button or F key inside the app to
+   enter fullscreen. Use Exit FS or Esc to leave it.
 
 Q: Chromium shows a "restore session" banner.
-A: The installer uses flags to suppress this.
-   If it persists, re-run the installer.
+A: Re-run the installer. The --disable-session-crashed-
+   bubble flag suppresses this in most cases.
 
 Q: localStorage says "not available".
-A: Normal for some Chromium kiosk configurations.
+A: Normal for some Chromium configurations.
    The app works fine; scripts won't persist between
-   sessions.
+   sessions in that case.
 
-Q: The mouse cursor is visible.
+Q: The mouse cursor is distracting.
 A: Install unclutter manually:
      sudo apt-get install -y unclutter
    Then run:
-     unclutter -idle 1 -root &
-
-Q: The splash screen does not appear.
-A: Ensure you have teleprompter.html v1.2 (1067+
-   lines). Hard-refresh with Ctrl+Shift+R.
+     unclutter -idle 2 -root &
 
 
 -----------------------------------------------------
@@ -314,8 +298,8 @@ REQUIREMENTS
 
   Raspberry Pi:
   - Raspberry Pi OS Desktop (Bookworm or Bullseye)
-  - Chromium (auto-installed if missing — needs internet
-    for that one step only)
+  - Chromium (auto-installed if missing — requires
+    internet for that one step only)
 
   Windows / Surface RT:
   - Open teleprompter.html directly in Internet

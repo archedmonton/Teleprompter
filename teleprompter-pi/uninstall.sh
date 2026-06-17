@@ -1,34 +1,34 @@
 #!/bin/bash
 # =============================================================
-#  Teleprompter — Raspberry Pi Uninstaller  v2.0
+#  Teleprompter — Raspberry Pi Uninstaller  v3.0
 #  The Catholic Archdiocese of Edmonton — Communications
 #  Author : Ruban Peppin <ruban.peppin@caedm.ca>
 #
 #  Removes ALL files created by install.sh:
 #    - ~/teleprompter/              (app files + icon)
-#    - ~/.config/autostart/teleprompter.desktop
-#    - ~/.config/autostart/unclutter.desktop
 #    - ~/Desktop/Teleprompter.desktop
 #    - ~/.local/share/applications/teleprompter.desktop
+#    - ~/.config/autostart/teleprompter.desktop  (legacy cleanup)
+#    - ~/.config/autostart/unclutter.desktop     (legacy cleanup)
 #
 #  Does NOT remove Chromium.
 #  Safe to run even if files do not exist.
 # =============================================================
 
 INSTALL_DIR="$HOME/teleprompter"
-AUTOSTART_FILE="$HOME/.config/autostart/teleprompter.desktop"
-UNCLUTTER_FILE="$HOME/.config/autostart/unclutter.desktop"
 DESKTOP_SHORTCUT="$HOME/Desktop/Teleprompter.desktop"
 APPMENU_FILE="$HOME/.local/share/applications/teleprompter.desktop"
+AUTOSTART_FILE="$HOME/.config/autostart/teleprompter.desktop"
+UNCLUTTER_FILE="$HOME/.config/autostart/unclutter.desktop"
 
 echo ""
 echo "============================================="
 echo "  Teleprompter Uninstaller for Raspberry Pi"
 echo "  The Catholic Archdiocese of Edmonton"
+echo "  v3.0"
 echo "============================================="
 echo ""
 
-# Helper function
 remove_item() {
     local label="$1"
     local path="$2"
@@ -38,15 +38,14 @@ remove_item() {
         echo "            $path"
     else
         echo "  [skipped] $label — not found"
-        echo "            $path"
     fi
 }
 
-remove_item "Install directory"         "$INSTALL_DIR"
-remove_item "Autostart entry"           "$AUTOSTART_FILE"
-remove_item "Unclutter autostart"       "$UNCLUTTER_FILE"
-remove_item "Desktop shortcut"          "$DESKTOP_SHORTCUT"
-remove_item "App Menu entry"            "$APPMENU_FILE"
+remove_item "Install directory"           "$INSTALL_DIR"
+remove_item "Desktop shortcut"            "$DESKTOP_SHORTCUT"
+remove_item "App Menu entry"              "$APPMENU_FILE"
+remove_item "Autostart entry (legacy)"    "$AUTOSTART_FILE"
+remove_item "Unclutter autostart (legacy)" "$UNCLUTTER_FILE"
 
 # Refresh app menu icon cache
 if command -v update-desktop-database > /dev/null 2>&1; then
@@ -59,7 +58,4 @@ echo "  Uninstall complete."
 echo "============================================="
 echo ""
 echo "  Chromium was NOT removed."
-echo ""
-echo "  Reboot to confirm autostart is cleared:"
-echo "    sudo reboot"
 echo ""

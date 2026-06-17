@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================
-#  Teleprompter — Raspberry Pi Installer  v2.0
+#  Teleprompter — Raspberry Pi Installer  v3.0
 #  The Catholic Archdiocese of Edmonton — Communications
 #  Author : Ruban Peppin <ruban.peppin@caedm.ca>
 #
@@ -11,7 +11,11 @@
 #    4. Installs unclutter (mouse cursor hider) if possible
 #    5. Creates a Desktop launcher   ~/Desktop/Teleprompter.desktop
 #    6. Creates an App Menu entry    ~/.local/share/applications/teleprompter.desktop
-#    7. Creates an Autostart entry   ~/.config/autostart/teleprompter.desktop
+#    7. Removes any leftover autostart entry from older installs
+#
+#  Chromium launches as a normal maximized window — NOT kiosk mode.
+#  The app does NOT start automatically on boot.
+#  To open: double-click the Desktop icon.
 #
 #  Safe to re-run multiple times.
 # =============================================================
@@ -32,19 +36,23 @@ AUTOSTART_FILE="$AUTOSTART_DIR/teleprompter.desktop"
 APPMENU_FILE="$APPMENU_DIR/teleprompter.desktop"
 DESKTOP_SHORTCUT="$DESKTOP_DIR/Teleprompter.desktop"
 
+# Chromium flags — maximized window, no banners, no crash dialogs
+CHROMIUM_FLAGS="--start-maximized --disable-infobars --noerrdialogs --disable-session-crashed-bubble"
+
 echo ""
 echo "============================================="
 echo "  Teleprompter Installer for Raspberry Pi"
 echo "  The Catholic Archdiocese of Edmonton"
+echo "  v3.0 — windowed mode, no autostart"
 echo "============================================="
 echo ""
 
 # ── STEP 1: Create install directory ─────────────────────────
-echo "[1/7] Creating install directory: $INSTALL_DIR"
+echo "[1/6] Creating install directory: $INSTALL_DIR"
 mkdir -p "$INSTALL_DIR"
 
 # ── STEP 2: Copy teleprompter.html ───────────────────────────
-echo "[2/7] Copying teleprompter.html..."
+echo "[2/6] Copying teleprompter.html..."
 if [ -f "$SCRIPT_DIR/teleprompter.html" ]; then
     cp "$SCRIPT_DIR/teleprompter.html" "$HTML_FILE"
     echo "      Copied to $HTML_FILE"
@@ -54,36 +62,30 @@ else
 fi
 
 # ── STEP 3: Copy / create SVG icon ───────────────────────────
-echo "[3/7] Installing application icon..."
+echo "[3/6] Installing application icon..."
 if [ -f "$SCRIPT_DIR/teleprompter-icon.svg" ]; then
     cp "$SCRIPT_DIR/teleprompter-icon.svg" "$ICON_FILE"
     echo "      Copied icon from $SCRIPT_DIR/teleprompter-icon.svg"
 else
-    # Write the embedded SVG icon directly
+    # Write the embedded fallback SVG icon
     cat > "$ICON_FILE" << 'SVG_EOF'
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
-  <!-- Background -->
   <rect width="64" height="64" rx="10" fill="#0a0a0a"/>
-  <!-- Screen rectangle -->
   <rect x="8" y="10" width="48" height="34" rx="4" fill="#1a1a1a" stroke="#860038" stroke-width="2"/>
-  <!-- Burgundy accent bar -->
-  <rect x="8" y="10" width="48" height="5" rx="4" fill="#860038"/>
-  <!-- Text lines (representing script) -->
-  <rect x="13" y="21" width="32" height="3" rx="1.5" fill="#ffffff" opacity="0.9"/>
-  <rect x="13" y="28" width="38" height="3" rx="1.5" fill="#ffffff" opacity="0.65"/>
-  <rect x="13" y="35" width="28" height="3" rx="1.5" fill="#ffffff" opacity="0.4"/>
-  <!-- Stand stem -->
-  <rect x="29" y="44" width="6" height="8" rx="2" fill="#333"/>
-  <!-- Stand base -->
-  <rect x="20" y="52" width="24" height="4" rx="2" fill="#444"/>
+  <rect x="8" y="10" width="48" height="6" rx="4" fill="#860038"/>
+  <rect x="13" y="22" width="34" height="3" rx="1.5" fill="#ffffff" opacity="0.95"/>
+  <rect x="13" y="29" width="38" height="3" rx="1.5" fill="#ffffff" opacity="0.65"/>
+  <rect x="13" y="36" width="26" height="3" rx="1.5" fill="#ffffff" opacity="0.38"/>
+  <rect x="29" y="44" width="6" height="8" rx="2" fill="#2a2a2a"/>
+  <rect x="19" y="52" width="26" height="4" rx="2" fill="#3a3a3a"/>
 </svg>
 SVG_EOF
     echo "      Created embedded SVG icon at $ICON_FILE"
 fi
 
 # ── STEP 4: Detect / install Chromium ────────────────────────
-echo "[4/7] Checking for Chromium..."
+echo "[4/6] Checking for Chromium..."
 CHROMIUM_CMD=""
 
 if command -v chromium-browser > /dev/null 2>&1; then
@@ -108,7 +110,7 @@ else
 fi
 
 # ── STEP 5: Install unclutter (mouse cursor hider) ───────────
-echo "[5/7] Checking for unclutter..."
+echo "[5/6] Checking for unclutter..."
 if command -v unclutter > /dev/null 2>&1; then
     echo "      unclutter already installed."
 else
@@ -117,11 +119,11 @@ else
         echo "      Could not install unclutter — mouse cursor remains visible (non-fatal)."
 fi
 
-# ── Helper: build the kiosk Exec line ────────────────────────
-KIOSK_EXEC="$CHROMIUM_CMD --kiosk --disable-infobars --noerrdialogs --disable-session-crashed-bubble --check-for-update-interval=31536000 \"$FILE_URL\""
+# ── Build the Exec command ────────────────────────────────────
+LAUNCH_EXEC="$CHROMIUM_CMD $CHROMIUM_FLAGS \"$FILE_URL\""
 
-# ── STEP 6: Create Desktop launcher ──────────────────────────
-echo "[6/7] Creating Desktop launcher..."
+# ── STEP 6a: Create Desktop launcher ─────────────────────────
+echo "[6/6] Creating Desktop launcher and App Menu entry..."
 mkdir -p "$DESKTOP_DIR"
 
 cat > "$DESKTOP_SHORTCUT" << DESK_EOF
@@ -130,8 +132,8 @@ Version=1.0
 Type=Application
 Name=Teleprompter
 GenericName=Teleprompter
-Comment=CAEDM Teleprompter — open in fullscreen kiosk mode
-Exec=bash -c '$KIOSK_EXEC'
+Comment=CAEDM Teleprompter — maximized window
+Exec=bash -c '$LAUNCH_EXEC'
 Icon=$ICON_FILE
 Terminal=false
 Categories=Utility;Office;
@@ -140,20 +142,18 @@ DESK_EOF
 
 chmod +x "$DESKTOP_SHORTCUT"
 
-# Raspberry Pi OS Bookworm requires the file to be trusted
-# Attempt to mark it trusted using gio (GNOME / LXDE)
+# Attempt to mark trusted (Raspberry Pi OS Bookworm)
 if command -v gio > /dev/null 2>&1; then
     gio set "$DESKTOP_SHORTCUT" metadata::trusted true 2>/dev/null && \
-        echo "      Marked as trusted via gio." || \
+        echo "      Desktop icon marked as trusted via gio." || \
         echo "      Note: right-click the desktop icon and choose 'Allow Launching' if needed."
 else
     echo "      Note: right-click the desktop icon and choose 'Allow Launching' if prompted."
 fi
 
-echo "      Desktop shortcut: $DESKTOP_SHORTCUT"
+echo "      Desktop shortcut : $DESKTOP_SHORTCUT"
 
-# ── STEP 7a: Create App Menu entry ───────────────────────────
-echo "[7/7] Creating App Menu and Autostart entries..."
+# ── STEP 6b: Create App Menu entry ───────────────────────────
 mkdir -p "$APPMENU_DIR"
 
 cat > "$APPMENU_FILE" << APPMENU_EOF
@@ -162,8 +162,8 @@ Version=1.0
 Type=Application
 Name=Teleprompter
 GenericName=Teleprompter
-Comment=CAEDM Teleprompter — fullscreen kiosk mode
-Exec=bash -c '$KIOSK_EXEC'
+Comment=CAEDM Teleprompter — maximized window
+Exec=bash -c '$LAUNCH_EXEC'
 Icon=$ICON_FILE
 Terminal=false
 Categories=Utility;Office;
@@ -171,40 +171,21 @@ StartupNotify=false
 APPMENU_EOF
 
 chmod +x "$APPMENU_FILE"
-echo "      App Menu entry : $APPMENU_FILE"
+echo "      App Menu entry   : $APPMENU_FILE"
 
-# ── STEP 7b: Create Autostart entry ──────────────────────────
-mkdir -p "$AUTOSTART_DIR"
+# ── STEP 6c: Remove any leftover autostart entry ──────────────
+if [ -f "$AUTOSTART_FILE" ]; then
+    rm -f "$AUTOSTART_FILE"
+    echo "      Removed old autostart entry: $AUTOSTART_FILE"
+else
+    echo "      No leftover autostart entry found (good)."
+fi
 
-cat > "$AUTOSTART_FILE" << AUTO_EOF
-[Desktop Entry]
-Version=1.0
-Type=Application
-Name=Teleprompter (Autostart)
-Comment=CAEDM Teleprompter — launches automatically on boot
-Exec=bash -c 'sleep 5 && $KIOSK_EXEC'
-Icon=$ICON_FILE
-Terminal=false
-X-GNOME-Autostart-enabled=true
-StartupNotify=false
-AUTO_EOF
-
-chmod +x "$AUTOSTART_FILE"
-echo "      Autostart entry: $AUTOSTART_FILE"
-
-# ── Unclutter autostart ───────────────────────────────────────
-if command -v unclutter > /dev/null 2>&1; then
-    UNCLUTTER_FILE="$AUTOSTART_DIR/unclutter.desktop"
-    cat > "$UNCLUTTER_FILE" << UNCLUTTER_EOF
-[Desktop Entry]
-Type=Application
-Name=Unclutter
-Comment=Hide mouse cursor when idle
-Exec=unclutter -idle 1 -root
-X-GNOME-Autostart-enabled=true
-UNCLUTTER_EOF
-    chmod +x "$UNCLUTTER_FILE"
-    echo "      Unclutter autostart: $UNCLUTTER_FILE"
+# Also remove old unclutter autostart if present
+UNCLUTTER_AUTOSTART="$AUTOSTART_DIR/unclutter.desktop"
+if [ -f "$UNCLUTTER_AUTOSTART" ]; then
+    rm -f "$UNCLUTTER_AUTOSTART"
+    echo "      Removed old unclutter autostart entry."
 fi
 
 # ── Update desktop icon cache ─────────────────────────────────
@@ -218,19 +199,19 @@ echo "============================================="
 echo "  Installation complete!"
 echo "============================================="
 echo ""
-echo "  App files       : $INSTALL_DIR"
-echo "  Desktop icon    : $DESKTOP_SHORTCUT"
-echo "  App Menu entry  : $APPMENU_FILE"
-echo "  Autostart entry : $AUTOSTART_FILE"
-echo "  Chromium cmd    : $CHROMIUM_CMD"
+echo "  App files      : $INSTALL_DIR"
+echo "  Desktop icon   : $DESKTOP_SHORTCUT"
+echo "  App Menu entry : $APPMENU_FILE"
+echo "  Chromium cmd   : $CHROMIUM_CMD"
+echo "  Launch mode    : Maximized window (no kiosk)"
+echo "  Autostart      : DISABLED"
 echo ""
-echo "  ► Double-click the desktop icon to launch."
+echo "  ► Double-click the Desktop icon to open."
 echo "  ► If prompted, choose 'Allow Launching'."
-echo "  ► Autostart is ENABLED — app opens on boot."
+echo "  ► The app does NOT open automatically on boot."
 echo ""
-echo "  To disable autostart without uninstalling:"
-echo "    rm \"$AUTOSTART_FILE\""
-echo ""
-echo "  To apply autostart, REBOOT:"
-echo "    sudo reboot"
+echo "  To update the teleprompter later, copy a new"
+echo "  teleprompter.html to:"
+echo "    $HTML_FILE"
+echo "  (No reboot or reinstall needed.)"
 echo ""
