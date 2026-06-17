@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Background card -->
+  <rect width="64" height="64" rx="10" fill="#0a0a0a"/>
+  <!-- Monitor screen body -->
+  <rect x="8" y="10" width="48" height="34" rx="4" fill="#1a1a1a" stroke="#860038" stroke-width="2"/>
+  <!-- Burgundy title bar -->
+  <rect x="8" y="10" width="48" height="6" rx="4" fill="#860038"/>
+  <!-- Script text lines -->
+  <rect x="13" y="22" width="34" height="3" rx="1.5" fill="#ffffff" opacity="0.95"/>
+  <rect x="13" y="29" width="38" height="3" rx="1.5" fill="#ffffff" opacity="0.65"/>
+  <rect x="13" y="36" width="26" height="3" rx="1.5" fill="#ffffff" opacity="0.38"/>
+  <!-- Stand stem -->
+  <rect x="29" y="44" width="6" height="8" rx="2" fill="#2a2a2a"/>
+  <!-- Stand base -->
+  <rect x="19" y="52" width="26" height="4" rx="2" fill="#3a3a3a"/>
+</svg>
