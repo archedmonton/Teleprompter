@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teleprompter</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+  }
+
+  body {
+    background: #000;
+    color: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ── LAYOUT ────────────────────────────────────────── */
+  #app {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ── TOP BAR ───────────────────────────────────────── */
+  #topbar {
+    background: #111;
+    border-bottom: 2px solid #333;
+    padding: 8px 12px;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-align: center;
+    align-items: center;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+    gap: 8px;
+    -ms-flex-negative: 0;
+    flex-shrink: 0;
+    z-index: 100;
+  }
+
+  #topbar.hidden {
+    display: none;
+  }
+
+  .bar-group {
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-align: center;
+    align-items: center;
+    gap: 6px;
+    background: #1a1a1a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 4px 8px;
+  }
+
+  .bar-label {
+    font-size: 11px;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .bar-value {
+    font-size: 14px;
+    font-weight: bold;
+    color: #fff;
+    min-width: 36px;
+    text-align: center;
+  }
+
+  /* ── BUTTONS ───────────────────────────────────────── */
+  button {
+    cursor: pointer;
+    border: none;
+    border-radius: 8px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-weight: bold;
+    -webkit-transition: background 0.15s, -webkit-transform 0.1s;
+    transition: background 0.15s, transform 0.1s;
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  button:active {
+    -webkit-transform: scale(0.94);
+    -ms-transform: scale(0.94);
+    transform: scale(0.94);
+  }
+
+  /* Small bar buttons */
+  .btn-sm {
+    background: #2a2a2a;
+    color: #fff;
+    font-size: 18px;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    border: 1px solid #555;
+  }
+
+  .btn-sm:hover {
+    background: #3a3a3a;
+  }
+
+  /* Primary action buttons */
+  .btn-primary {
+    background: #1a6fc4;
+    color: #fff;
+    font-size: 16px;
+    height: 44px;
+    padding: 0 18px;
+    border: 1px solid #2589e0;
+  }
+
+  .btn-primary:hover {
+    background: #2589e0;
+  }
+
+  .btn-primary.active {
+    background: #c4581a;
+    border-color: #e07025;
+  }
+
+  .btn-primary.active:hover {
+    background: #e07025;
+  }
+
+  /* Danger / utility buttons */
+  .btn-danger {
+    background: #8b1a1a;
+    color: #fff;
+    font-size: 16px;
+    height: 44px;
+    padding: 0 16px;
+    border: 1px solid #c42222;
+  }
+
+  .btn-danger:hover {
+    background: #c42222;
+  }
+
+  .btn-util {
+    background: #2a2a2a;
+    color: #ddd;
+    font-size: 14px;
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid #555;
+  }
+
+  .btn-util:hover {
+    background: #3a3a3a;
+  }
+
+  .btn-util.on {
+    background: #1a5a1a;
+    border-color: #27822a;
+    color: #fff;
+  }
+
+  /* ── EDITOR PANEL ──────────────────────────────────── */
+  #editor-panel {
+    background: #0d0d0d;
+    border-bottom: 2px solid #333;
+    padding: 10px 12px;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    gap: 8px;
+    -ms-flex-negative: 0;
+    flex-shrink: 0;
+    max-height: 38vh;
+  }
+
+  #editor-panel.hidden {
+    display: none;
+  }
+
+  #editor-panel-title {
+    font-size: 12px;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  #script-input {
+    width: 100%;
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+    min-height: 100px;
+    background: #111;
+    color: #fff;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 10px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+  }
+
+  #script-input:focus {
+    border-color: #1a6fc4;
+  }
+
+  .editor-btns {
+    display: -ms-flexbox;
+    display: flex;
+    gap: 8px;
+    -ms-flex-wrap: wrap;
+    flex-wrap: wrap;
+  }
+
+  /* ── TELEPROMPTER DISPLAY ──────────────────────────── */
+  #prompt-wrapper {
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+    overflow: hidden;
+    position: relative;
+    background: #000;
+  }
+
+  #prompt-scroll {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    /* Hide scrollbar IE/Edge */
+    -ms-overflow-style: none;
+  }
+
+  /* Hide scrollbar Webkit */
+  #prompt-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  #prompt-text {
+    padding: 40px 8% 60vh;
+    font-size: 54px;
+    line-height: 1.45;
+    color: #fff;
+    text-align: center;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  /* Mirror mode */
+  #prompt-wrapper.mirrored #prompt-scroll {
+    -webkit-transform: scaleX(-1);
+    -ms-transform: scaleX(-1);
+    transform: scaleX(-1);
+  }
+
+  /* Gradient fade at top */
+  #prompt-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: -webkit-linear-gradient(top, #000 0%, transparent 100%);
+    background: linear-gradient(to bottom, #000 0%, transparent 100%);
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  /* Gradient fade at bottom */
+  #prompt-wrapper::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: -webkit-linear-gradient(bottom, #000 0%, transparent 100%);
+    background: linear-gradient(to top, #000 0%, transparent 100%);
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  /* Reading guide line */
+  #guide-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 28%;
+    height: 3px;
+    background: rgba(255, 180, 0, 0.35);
+    z-index: 11;
+    pointer-events: none;
+  }
+
+  /* ── HIDE CONTROLS OVERLAY BUTTON ──────────────────── */
+  #show-controls-btn {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    z-index: 50;
+    background: rgba(30,30,30,0.85);
+    color: #aaa;
+    border: 1px solid #555;
+    border-radius: 8px;
+    font-size: 13px;
+    padding: 8px 14px;
+    display: none;
+  }
+
+  #show-controls-btn:hover {
+    background: rgba(50,50,50,0.95);
+    color: #fff;
+  }
+
+  /* ── STATUS BAR ────────────────────────────────────── */
+  #status-bar {
+    background: #0a0a0a;
+    border-top: 1px solid #222;
+    padding: 4px 14px;
+    font-size: 11px;
+    color: #555;
+    -ms-flex-negative: 0;
+    flex-shrink: 0;
+    display: -ms-flexbox;
+    display: flex;
+    gap: 20px;
+    -ms-flex-align: center;
+    align-items: center;
+  }
+
+  #status-bar.hidden {
+    display: none;
+  }
+
+  #status-msg {
+    color: #777;
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+  }
+
+  /* ── SHORTCUT HINT ─────────────────────────────────── */
+  #shortcut-hint {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    background: rgba(20,20,20,0.92);
+    border: 1px solid #444;
+    border-radius: 12px;
+    padding: 24px 32px;
+    z-index: 200;
+    display: none;
+    text-align: center;
+    min-width: 260px;
+  }
+
+  #shortcut-hint h3 {
+    font-size: 16px;
+    color: #ffd;
+    margin-bottom: 14px;
+  }
+
+  #shortcut-hint table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  #shortcut-hint td {
+    padding: 4px 8px;
+    color: #ccc;
+    text-align: left;
+  }
+
+  #shortcut-hint td:first-child {
+    color: #ffd;
+    font-weight: bold;
+    min-width: 90px;
+  }
+
+  #shortcut-hint-close {
+    margin-top: 16px;
+    background: #333;
+    color: #fff;
+    border: 1px solid #555;
+    border-radius: 6px;
+    padding: 8px 20px;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  /* ── SPLASH SCREEN ─────────────────────────────────── */
+  #splash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #060606;
+    z-index: 9999;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -ms-flex-align: center;
+    align-items: center;
+    opacity: 1;
+    -webkit-transition: opacity 0.75s ease;
+       -moz-transition: opacity 0.75s ease;
+        -ms-transition: opacity 0.75s ease;
+            transition: opacity 0.75s ease;
+  }
+
+  #splash.fading {
+    opacity: 0;
+  }
+
+  #splash.gone {
+    display: none;
+  }
+
+  #splash-inner {
+    text-align: center;
+    padding: 0 32px;
+    max-width: 640px;
+    width: 90%;
+  }
+
+  #splash-title {
+    font-size: 56px;
+    font-weight: bold;
+    color: #fff;
+    letter-spacing: 1px;
+    margin-bottom: 12px;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+
+  #splash-rule {
+    width: 80px;
+    height: 4px;
+    background: #860038;
+    margin: 0 auto 20px auto;
+    border: none;
+  }
+
+  #splash-org {
+    font-size: 20px;
+    color: #ddd;
+    font-family: Arial, Helvetica, sans-serif;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+  }
+
+  #splash-dev {
+    font-size: 13px;
+    color: #888;
+    font-family: Arial, Helvetica, sans-serif;
+    letter-spacing: 0.3px;
+  }
+
+  #splash-skip {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    background: #860038;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 10px 22px;
+    cursor: pointer;
+    -ms-touch-action: manipulation;
+    touch-action: manipulation;
+  }
+
+  #splash-skip:hover {
+    background: #a8003f;
+  }
+
+  #splash-skip:active {
+    background: #600028;
+  }
+</style>
+</head>
+<body>
+
+<!-- ── SPLASH SCREEN ───────────────────────────────────────── -->
+<div id="splash" role="dialog" aria-label="Splash screen">
+  <div id="splash-inner">
+    <div id="splash-title">Teleprompter</div>
+    <hr id="splash-rule">
+    <div id="splash-org">The Catholic Archdiocese of Edmonton</div>
+    <div id="splash-dev">Developed by Communications</div>
+  </div>
+  <button id="splash-skip">Skip &#8250;</button>
+</div>
+
+<div id="app">
+
+  <!-- ── TOP CONTROLS BAR ─────────────────────────────── -->
+  <div id="topbar">
+
+    <!-- Playback -->
+    <div class="bar-group">
+      <button class="btn-primary" id="btn-play" title="Space">&#9654; Start</button>
+      <button class="btn-util" id="btn-reset" title="R">&#8592; Reset</button>
+    </div>
+
+    <!-- Speed -->
+    <div class="bar-group">
+      <span class="bar-label">Speed</span>
+      <button class="btn-sm" id="btn-slower" title="Down arrow">&#9660;</button>
+      <span class="bar-value" id="speed-val">3</span>
+      <button class="btn-sm" id="btn-faster" title="Up arrow">&#9650;</button>
+    </div>
+
+    <!-- Font size -->
+    <div class="bar-group">
+      <span class="bar-label">Size</span>
+      <button class="btn-sm" id="btn-smaller" title="Left arrow">A&#8722;</button>
+      <span class="bar-value" id="size-val">54</span>
+      <button class="btn-sm" id="btn-larger" title="Right arrow">A+</button>
+    </div>
+
+    <!-- Mirror -->
+    <div class="bar-group">
+      <button class="btn-util" id="btn-mirror" title="M">&#8596; Mirror</button>
+    </div>
+
+    <!-- Script storage -->
+    <div class="bar-group">
+      <button class="btn-util" id="btn-save" title="Save script">&#128190; Save</button>
+      <button class="btn-util" id="btn-load" title="Load saved script">&#128193; Load</button>
+      <button class="btn-danger" id="btn-clear" title="Clear script">&#10006; Clear</button>
+    </div>
+
+    <!-- View toggles -->
+    <div class="bar-group">
+      <button class="btn-util" id="btn-fullscreen" title="F — enter fullscreen">&#9974; Full</button>
+      <button class="btn-util" id="btn-exit-fullscreen" title="Exit fullscreen">&#10005; Exit FS</button>
+      <button class="btn-util" id="btn-hide-editor" title="Toggle editor">&#128196; Editor</button>
+      <button class="btn-util" id="btn-hide-controls" title="H — hide controls">&#128065; Focus</button>
+      <button class="btn-util" id="btn-shortcuts" title="Keyboard shortcuts">? Keys</button>
+    </div>
+
+  </div><!-- /topbar -->
+
+  <!-- ── SCRIPT EDITOR ─────────────────────────────────── -->
+  <div id="editor-panel">
+    <span id="editor-panel-title">Script Editor — paste or type your text below, then press Start</span>
+    <textarea id="script-input" rows="6" spellcheck="false"
+      placeholder="Paste your speech, homily, or announcement here...">Welcome to the Teleprompter!
+
+HOW TO USE:
+1. Replace this text with your own script by clicking in this box and typing or pasting.
+2. Press the green Start button (or Space bar) to begin scrolling.
+3. Adjust Speed with the arrow buttons (or Up / Down keys).
+4. Adjust Font Size with the A+ / A− buttons (or Left / Right keys).
+5. Press Mirror to flip the text for a teleprompter glass.
+6. Press Focus (H key) to hide all controls for a clean reading view.
+7. Press Reset (R key) to return to the top at any time.
+8. Use Save / Load to keep your script between sessions.
+
+Enjoy your presentation!</textarea>
+    <div class="editor-btns">
+      <button class="btn-primary" id="btn-load-to-prompt" style="font-size:15px; height:42px; padding:0 20px;">&#9654; Load Script into Prompter</button>
+    </div>
+  </div>
+
+  <!-- ── TELEPROMPTER DISPLAY ──────────────────────────── -->
+  <div id="prompt-wrapper">
+    <div id="guide-line"></div>
+    <div id="prompt-scroll">
+      <div id="prompt-text">Welcome to the Teleprompter!
+
+HOW TO USE:
+1. Replace this text with your own script by clicking in this box and typing or pasting.
+2. Press the green Start button (or Space bar) to begin scrolling.
+3. Adjust Speed with the arrow buttons (or Up / Down keys).
+4. Adjust Font Size with the A+ / A− buttons (or Left / Right keys).
+5. Press Mirror to flip the text for a teleprompter glass.
+6. Press Focus (H key) to hide all controls for a clean reading view.
+7. Press Reset (R key) to return to the top at any time.
+8. Use Save / Load to keep your script between sessions.
+
+Enjoy your presentation!</div>
+    </div>
+    <!-- Overlay button to restore controls -->
+    <button id="show-controls-btn" title="H — show controls">&#9776; Show Controls</button>
+  </div>
+
+  <!-- ── STATUS BAR ────────────────────────────────────── -->
+  <div id="status-bar">
+    <span id="status-msg">Ready. Edit your script above, then press Start.</span>
+    <span id="storage-status">localStorage: checking&hellip;</span>
+  </div>
+
+  <!-- ── SHORTCUT HINT OVERLAY ─────────────────────────── -->
+  <div id="shortcut-hint">
+    <h3>Keyboard Shortcuts</h3>
+    <table>
+      <tr><td>Space</td><td>Start / Pause</td></tr>
+      <tr><td>R</td><td>Reset to top</td></tr>
+      <tr><td>Up / Down</td><td>Speed faster / slower</td></tr>
+      <tr><td>Left / Right</td><td>Font smaller / larger</td></tr>
+      <tr><td>M</td><td>Mirror mode</td></tr>
+      <tr><td>H</td><td>Hide / show controls</td></tr>
+      <tr><td>F</td><td>Fullscreen (if supported)</td></tr>
+    </table>
+    <button id="shortcut-hint-close">Close</button>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+/* ─────────────────────────────────────────────────────────────
+   TELEPROMPTER — ES5-compatible, single-file, no dependencies
+   ───────────────────────────────────────────────────────────── */
+
+(function () {
+  'use strict';
+
+  /* ── State ─────────────────────────────────────────────── */
+  var running    = false;
+  var mirrored   = false;
+  var speed      = 3;       // pixels per tick
+  var fontSize   = 54;      // px
+  var minSpeed   = 1;
+  var maxSpeed   = 20;
+  var minFont    = 20;
+  var maxFont    = 120;
+  var tickMs     = 30;      // ~33 fps
+  var timerID    = null;
+  var controlsHidden  = false;
+  var editorVisible   = true;
+  var storageOK  = false;
+
+  /* ── Elements ──────────────────────────────────────────── */
+  var topbar          = document.getElementById('topbar');
+  var editorPanel     = document.getElementById('editor-panel');
+  var scriptInput     = document.getElementById('script-input');
+  var promptWrapper   = document.getElementById('prompt-wrapper');
+  var promptScroll    = document.getElementById('prompt-scroll');
+  var promptText      = document.getElementById('prompt-text');
+  var showCtrlsBtn    = document.getElementById('show-controls-btn');
+  var statusBar       = document.getElementById('status-bar');
+  var statusMsg       = document.getElementById('status-msg');
+  var storageStatus   = document.getElementById('storage-status');
+  var shortcutHint    = document.getElementById('shortcut-hint');
+
+  var btnPlay         = document.getElementById('btn-play');
+  var btnReset        = document.getElementById('btn-reset');
+  var btnSlower       = document.getElementById('btn-slower');
+  var btnFaster       = document.getElementById('btn-faster');
+  var btnSmaller      = document.getElementById('btn-smaller');
+  var btnLarger       = document.getElementById('btn-larger');
+  var btnMirror       = document.getElementById('btn-mirror');
+  var btnSave         = document.getElementById('btn-save');
+  var btnLoad         = document.getElementById('btn-load');
+  var btnClear        = document.getElementById('btn-clear');
+  var btnFullscreen      = document.getElementById('btn-fullscreen');
+  var btnExitFullscreen  = document.getElementById('btn-exit-fullscreen');
+  var btnHideEditor      = document.getElementById('btn-hide-editor');
+  var btnHideControls    = document.getElementById('btn-hide-controls');
+  var btnShortcuts       = document.getElementById('btn-shortcuts');
+  var btnLoadToPrompt    = document.getElementById('btn-load-to-prompt');
+  var speedVal           = document.getElementById('speed-val');
+  var sizeVal            = document.getElementById('size-val');
+  var shortcutClose      = document.getElementById('shortcut-hint-close');
+
+  /* ── localStorage check ─────────────────────────────── */
+  (function () {
+    try {
+      localStorage.setItem('__tp_test__', '1');
+      localStorage.removeItem('__tp_test__');
+      storageOK = true;
+      storageStatus.textContent = 'Storage: available';
+    } catch (e) {
+      storageOK = false;
+      storageStatus.textContent = 'Storage: not available';
+    }
+  }());
+
+  /* ── Helpers ─────────────────────────────────────────── */
+  function setStatus(msg) {
+    statusMsg.textContent = msg;
+  }
+
+  function updateSpeedDisplay() {
+    speedVal.textContent = speed;
+  }
+
+  function updateFontDisplay() {
+    sizeVal.textContent = fontSize;
+    promptText.style.fontSize = fontSize + 'px';
+  }
+
+  function clamp(val, lo, hi) {
+    return Math.max(lo, Math.min(hi, val));
+  }
+
+  /* ── Scroll engine ───────────────────────────────────── */
+  function tick() {
+    promptScroll.scrollTop += speed;
+    // Auto-stop at bottom
+    var atBottom = promptScroll.scrollTop + promptScroll.clientHeight >= promptScroll.scrollHeight - 4;
+    if (atBottom) {
+      pause();
+      setStatus('End of script. Press Reset to start over.');
+    }
+  }
+
+  function play() {
+    if (running) { return; }
+    running = true;
+    timerID = setInterval(tick, tickMs);
+    btnPlay.innerHTML = '&#9646;&#9646; Pause';
+    btnPlay.className = 'btn-primary active';
+    setStatus('Scrolling\u2026');
+  }
+
+  function pause() {
+    if (!running) { return; }
+    running = false;
+    clearInterval(timerID);
+    timerID = null;
+    btnPlay.innerHTML = '&#9654; Start';
+    btnPlay.className = 'btn-primary';
+    setStatus('Paused.');
+  }
+
+  function togglePlay() {
+    if (running) { pause(); } else { play(); }
+  }
+
+  function reset() {
+    pause();
+    promptScroll.scrollTop = 0;
+    setStatus('Reset to top.');
+  }
+
+  /* ── Speed ───────────────────────────────────────────── */
+  function changeSpeed(delta) {
+    speed = clamp(speed + delta, minSpeed, maxSpeed);
+    updateSpeedDisplay();
+    setStatus('Speed: ' + speed);
+  }
+
+  /* ── Font size ───────────────────────────────────────── */
+  function changeFontSize(delta) {
+    fontSize = clamp(fontSize + delta, minFont, maxFont);
+    updateFontDisplay();
+    setStatus('Font size: ' + fontSize + 'px');
+  }
+
+  /* ── Mirror ──────────────────────────────────────────── */
+  function toggleMirror() {
+    mirrored = !mirrored;
+    if (mirrored) {
+      promptWrapper.className = 'mirrored';
+      btnMirror.className = 'btn-util on';
+      setStatus('Mirror mode ON.');
+    } else {
+      promptWrapper.className = '';
+      btnMirror.className = 'btn-util';
+      setStatus('Mirror mode OFF.');
+    }
+  }
+
+  /* ── Load script into prompter ───────────────────────── */
+  function loadScriptToPrompter() {
+    var text = scriptInput.value;
+    if (!text || !text.length) {
+      setStatus('Script is empty. Type or paste text first.');
+      return;
+    }
+    promptText.textContent = text;
+    promptScroll.scrollTop = 0;
+    setStatus('Script loaded into prompter.');
+  }
+
+  /* ── localStorage save / load ────────────────────────── */
+  function saveScript() {
+    if (!storageOK) {
+      setStatus('Storage not available in this browser.');
+      return;
+    }
+    try {
+      localStorage.setItem('tp_script', scriptInput.value);
+      setStatus('Script saved.');
+    } catch (e) {
+      setStatus('Save failed: ' + (e.message || e));
+    }
+  }
+
+  function loadScript() {
+    if (!storageOK) {
+      setStatus('Storage not available in this browser.');
+      return;
+    }
+    try {
+      var saved = localStorage.getItem('tp_script');
+      if (saved === null || saved === undefined) {
+        setStatus('No saved script found.');
+        return;
+      }
+      scriptInput.value = saved;
+      setStatus('Script loaded from storage.');
+    } catch (e) {
+      setStatus('Load failed: ' + (e.message || e));
+    }
+  }
+
+  function clearScript() {
+    if (!confirm('Clear the script? This cannot be undone.')) { return; }
+    scriptInput.value = '';
+    promptText.textContent = '';
+    setStatus('Script cleared.');
+  }
+
+  /* ── Fullscreen helpers ──────────────────────────────── */
+  function isFullscreen() {
+    return !!(document.fullscreenElement ||
+              document.msFullscreenElement ||
+              document.webkitFullscreenElement ||
+              document.mozFullScreenElement);
+  }
+
+  function exitFullscreen() {
+    if (!isFullscreen()) {
+      setStatus('Fullscreen is not active.');
+      return;
+    }
+    try {
+      if (document.exitFullscreen)          { document.exitFullscreen(); }
+      else if (document.msExitFullscreen)   { document.msExitFullscreen(); }
+      else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+      else if (document.mozCancelFullScreen)  { document.mozCancelFullScreen(); }
+      setStatus('Exited fullscreen.');
+    } catch (e) {
+      setStatus('Could not exit fullscreen: ' + (e.message || e));
+    }
+  }
+
+  function toggleFullscreen() {
+    var el = document.documentElement;
+    try {
+      if (isFullscreen()) {
+        exitFullscreen();
+      } else {
+        // Request fullscreen
+        if (el.requestFullscreen)            { el.requestFullscreen(); }
+        else if (el.msRequestFullscreen)     { el.msRequestFullscreen(); }
+        else if (el.webkitRequestFullscreen) { el.webkitRequestFullscreen(); }
+        else if (el.mozRequestFullScreen)    { el.mozRequestFullScreen(); }
+        else {
+          setStatus('Fullscreen not supported in this browser.');
+          return;
+        }
+        setStatus('Fullscreen mode.');
+      }
+    } catch (e) {
+      setStatus('Fullscreen not supported.');
+    }
+  }
+
+  /* ── Hide / show editor ──────────────────────────────── */
+  function toggleEditor() {
+    editorVisible = !editorVisible;
+    if (editorVisible) {
+      editorPanel.className = '';
+      btnHideEditor.className = 'btn-util on';
+      setStatus('Editor shown.');
+    } else {
+      editorPanel.className = 'hidden';
+      btnHideEditor.className = 'btn-util';
+      setStatus('Editor hidden.');
+    }
+  }
+
+  /* ── Hide / show all controls (focus mode) ───────────── */
+  function hideControls() {
+    controlsHidden = true;
+    topbar.className = 'hidden';
+    editorPanel.className = 'hidden';
+    statusBar.className = 'hidden';
+    shortcutHint.style.display = 'none';
+    showCtrlsBtn.style.display = 'block';
+    setStatus('Controls hidden. Press H or tap the corner button to restore.');
+  }
+
+  function showControls() {
+    controlsHidden = false;
+    topbar.className = '';
+    if (editorVisible) { editorPanel.className = ''; }
+    statusBar.className = '';
+    showCtrlsBtn.style.display = 'none';
+  }
+
+  function toggleControls() {
+    if (controlsHidden) { showControls(); } else { hideControls(); }
+  }
+
+  /* ── Shortcuts overlay ───────────────────────────────── */
+  function showShortcuts() {
+    shortcutHint.style.display = 'block';
+  }
+
+  function hideShortcuts() {
+    shortcutHint.style.display = 'none';
+  }
+
+  /* ── Keyboard shortcuts ──────────────────────────────── */
+  document.onkeydown = function (e) {
+    var tag = (e.target || e.srcElement).tagName.toUpperCase();
+    // Don't intercept keys while typing in the textarea
+    if (tag === 'TEXTAREA' || tag === 'INPUT') { return; }
+
+    var key = e.keyCode || e.which;
+
+    if (key === 32) {                  // Space
+      e.preventDefault && e.preventDefault();
+      togglePlay();
+    } else if (key === 38) {           // Up arrow — faster
+      e.preventDefault && e.preventDefault();
+      changeSpeed(1);
+    } else if (key === 40) {           // Down arrow — slower
+      e.preventDefault && e.preventDefault();
+      changeSpeed(-1);
+    } else if (key === 37) {           // Left arrow — smaller font
+      e.preventDefault && e.preventDefault();
+      changeFontSize(-2);
+    } else if (key === 39) {           // Right arrow — larger font
+      e.preventDefault && e.preventDefault();
+      changeFontSize(2);
+    } else if (key === 77) {           // M — mirror
+      toggleMirror();
+    } else if (key === 82) {           // R — reset
+      reset();
+    } else if (key === 72) {           // H — hide/show controls
+      toggleControls();
+    } else if (key === 70) {           // F — fullscreen
+      toggleFullscreen();
+    }
+  };
+
+  /* ── Button event bindings ───────────────────────────── */
+  function addClick(el, fn) {
+    if (el.addEventListener) {
+      el.addEventListener('click', fn, false);
+    } else if (el.attachEvent) {
+      el.attachEvent('onclick', fn);
+    }
+  }
+
+  addClick(btnPlay,            togglePlay);
+  addClick(btnReset,           reset);
+  addClick(btnSlower,          function () { changeSpeed(-1); });
+  addClick(btnFaster,          function () { changeSpeed(1); });
+  addClick(btnSmaller,         function () { changeFontSize(-2); });
+  addClick(btnLarger,          function () { changeFontSize(2); });
+  addClick(btnMirror,          toggleMirror);
+  addClick(btnSave,            saveScript);
+  addClick(btnLoad,            loadScript);
+  addClick(btnClear,           clearScript);
+  addClick(btnFullscreen,      toggleFullscreen);
+  addClick(btnExitFullscreen,  exitFullscreen);
+  addClick(btnHideEditor,      toggleEditor);
+  addClick(btnHideControls,    toggleControls);
+  addClick(btnShortcuts,       showShortcuts);
+  addClick(btnLoadToPrompt,    loadScriptToPrompter);
+  addClick(showCtrlsBtn,       showControls);
+  addClick(shortcutClose,      hideShortcuts);
+
+  /* ── Touch: tap prompter to play/pause ──────────────── */
+  if (promptScroll.addEventListener) {
+    promptScroll.addEventListener('touchend', function (e) {
+      // Only toggle if not scrolling manually (simple heuristic)
+      togglePlay();
+    }, false);
+  }
+
+  /* ── Init display ────────────────────────────────────── */
+  updateSpeedDisplay();
+  updateFontDisplay();
+
+  /* Mark editor button as "on" initially */
+  btnHideEditor.className = 'btn-util on';
+
+  setStatus('Ready. Edit your script above, then press Start.');
+
+  /* ── Splash screen logic ─────────────────────────────── */
+  (function () {
+    var splash     = document.getElementById('splash');
+    var skipBtn    = document.getElementById('splash-skip');
+    var fadeTimer  = null;
+    var hideTimer  = null;
+
+    /* Detect CSS transition support (IE 10+ / modern browsers) */
+    var style = splash.style;
+    var hasTransition = (typeof style.transition === 'string' ||
+                         typeof style.WebkitTransition === 'string' ||
+                         typeof style.MsTransition === 'string' ||
+                         typeof style.MozTransition === 'string');
+
+    function hideSplash() {
+      clearTimeout(fadeTimer);
+      clearTimeout(hideTimer);
+      if (hasTransition) {
+        /* Trigger CSS opacity transition */
+        splash.className = 'fading';
+        /* After transition ends (~750 ms), remove from layout */
+        hideTimer = setTimeout(function () {
+          splash.className = 'gone';
+        }, 800);
+      } else {
+        /* Fallback: no animation, just remove */
+        splash.className = 'gone';
+      }
+    }
+
+    /* Auto-dismiss after 2500 ms */
+    fadeTimer = setTimeout(hideSplash, 2500);
+
+    /* Skip button */
+    if (skipBtn.addEventListener) {
+      skipBtn.addEventListener('click', hideSplash, false);
+    } else if (skipBtn.attachEvent) {
+      skipBtn.attachEvent('onclick', hideSplash);
+    }
+  }());
+
+}());
+</script>
+</body>
+</html>
