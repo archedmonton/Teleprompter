@@ -1,6 +1,6 @@
 =====================================================
   TELEPROMPTER — Raspberry Pi Setup Guide
-  v3.0
+  v3.1
 =====================================================
 
   Organization : The Catholic Archdiocese of Edmonton
@@ -18,6 +18,14 @@
 =====================================================
   VERSION HISTORY
 =====================================================
+
+  v3.1.0  2026-06-17
+    - Added dedicated Chromium profile for stability
+      (~/.teleprompter-chrome-profile)
+    - launch-teleprompter.sh added to automatically
+      clear stale Chromium lock files on launch
+    - Eliminates "Restore Session" crash prompts
+    - uninstall.sh updated to clean up profile
 
   v3.0.0  2026-06-17
     - Removed kiosk mode entirely; Chromium now
@@ -82,8 +90,8 @@ FOLDER CONTENTS
 
   teleprompter.html        The teleprompter web app (v1.2)
   teleprompter-icon.svg    Application icon (dark, burgundy accent)
-  install.sh               Raspberry Pi installer (v3.0)
-  uninstall.sh             Raspberry Pi uninstaller (v3.0)
+  install.sh               Raspberry Pi installer (v3.1)
+  uninstall.sh             Raspberry Pi uninstaller (v3.1)
   README.txt               This file
 
 
@@ -100,6 +108,11 @@ WHAT THE INSTALLER CREATES
   3. ~/.local/share/applications/teleprompter.desktop
      Adds Teleprompter to the Application Menu
      (under Utilities / Office).
+
+  4. ~/teleprompter/launch-teleprompter.sh
+     A safe launch script that deletes stale Chromium
+     crash locks before opening the app using a
+     dedicated profile: ~/.teleprompter-chrome-profile
 
   The app does NOT start automatically on boot.
   Open it manually by double-clicking the Desktop icon.
@@ -166,14 +179,15 @@ STEP 3 — RUN THE INSTALLER
 
   ./install.sh
 
-The installer will print 6 numbered steps:
+The installer will print 7 numbered steps:
 
-  [1/6] Create ~/teleprompter/ directory
-  [2/6] Copy teleprompter.html
-  [3/6] Install SVG icon
-  [4/6] Detect / install Chromium
-  [5/6] Install unclutter (mouse hider, optional)
-  [6/6] Create Desktop icon + App Menu entry
+  [1/7] Create ~/teleprompter/ directory
+  [2/7] Copy teleprompter.html
+  [3/7] Install SVG icon
+  [4/7] Detect / install Chromium
+  [5/7] Install unclutter (mouse hider, optional)
+  [6/7] Create launcher script
+  [7/7] Create Desktop icon + App Menu entry
         Remove any old autostart entries (cleanup)
 
 
@@ -252,6 +266,7 @@ This removes:
   ✓ ~/teleprompter/                           (app + icon)
   ✓ ~/Desktop/Teleprompter.desktop            (desktop icon)
   ✓ ~/.local/share/applications/teleprompter.desktop
+  ✓ ~/.teleprompter-chrome-profile            (profile)
   ✓ ~/.config/autostart/teleprompter.desktop  (if present)
   ✓ ~/.config/autostart/unclutter.desktop     (if present)
 
@@ -277,8 +292,9 @@ A: This is expected — the app is not in kiosk mode.
    enter fullscreen. Use Exit FS or Esc to leave it.
 
 Q: Chromium shows a "restore session" banner.
-A: Re-run the installer. The --disable-session-crashed-
-   bubble flag suppresses this in most cases.
+A: This should no longer happen in v3.1, as the new
+   launch script deletes crash locks automatically.
+   Ensure you use the Desktop icon to open the app.
 
 Q: localStorage says "not available".
 A: Normal for some Chromium configurations.

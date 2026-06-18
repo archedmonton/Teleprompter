@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================
-#  Teleprompter — Raspberry Pi Installer  v3.0
+#  Teleprompter — Raspberry Pi Installer  v3.1
 #  The Catholic Archdiocese of Edmonton — Communications
 #  Author : Ruban Peppin <ruban.peppin@caedm.ca>
 #
@@ -27,6 +27,7 @@ INSTALL_DIR="$HOME/teleprompter"
 HTML_FILE="$INSTALL_DIR/teleprompter.html"
 ICON_FILE="$INSTALL_DIR/teleprompter-icon.svg"
 FILE_URL="file://$HTML_FILE"
+LAUNCHER_SCRIPT="$INSTALL_DIR/launch-teleprompter.sh"
 
 AUTOSTART_DIR="$HOME/.config/autostart"
 APPMENU_DIR="$HOME/.local/share/applications"
@@ -43,7 +44,7 @@ echo ""
 echo "============================================="
 echo "  Teleprompter Installer for Raspberry Pi"
 echo "  The Catholic Archdiocese of Edmonton"
-echo "  v3.0 — windowed mode, no autostart"
+echo "  v3.1 — clean profile, windowed mode, no autostart"
 echo "============================================="
 echo ""
 
@@ -119,11 +120,37 @@ else
         echo "      Could not install unclutter — mouse cursor remains visible (non-fatal)."
 fi
 
-# ── Build the Exec command ────────────────────────────────────
-LAUNCH_EXEC="$CHROMIUM_CMD $CHROMIUM_FLAGS \"$FILE_URL\""
+# ── STEP 6: Create Launcher Script ───────────────────────────
+echo "[6/7] Creating launcher script..."
 
-# ── STEP 6a: Create Desktop launcher ─────────────────────────
-echo "[6/6] Creating Desktop launcher and App Menu entry..."
+cat > "$LAUNCHER_SCRIPT" << LAUNCH_EOF
+#!/bin/bash
+
+PROFILE_DIR="\$HOME/.teleprompter-chrome-profile"
+
+# Clean stale lock files to prevent "Restore Session" crash prompts
+rm -f "\$PROFILE_DIR/SingletonLock"
+rm -f "\$PROFILE_DIR/SingletonSocket"
+rm -f "\$PROFILE_DIR/SingletonCookie"
+rm -f "\$PROFILE_DIR/Default/Preferences.lock"
+
+# Launch Chromium cleanly
+exec "$CHROMIUM_CMD" \\
+  --user-data-dir="\$PROFILE_DIR" \\
+  --start-maximized \\
+  --no-first-run \\
+  --disable-session-crashed-bubble \\
+  --disable-infobars \\
+  --noerrdialogs \\
+  --disable-restore-session-state \\
+  "$FILE_URL"
+LAUNCH_EOF
+
+chmod +x "$LAUNCHER_SCRIPT"
+echo "      Created: $LAUNCHER_SCRIPT"
+
+# ── STEP 7a: Create Desktop launcher ─────────────────────────
+echo "[7/7] Creating Desktop launcher and App Menu entry..."
 mkdir -p "$DESKTOP_DIR"
 
 cat > "$DESKTOP_SHORTCUT" << DESK_EOF
@@ -133,7 +160,7 @@ Type=Application
 Name=Teleprompter
 GenericName=Teleprompter
 Comment=CAEDM Teleprompter — maximized window
-Exec=bash -c '$LAUNCH_EXEC'
+Exec=bash -c '$LAUNCHER_SCRIPT'
 Icon=$ICON_FILE
 Terminal=false
 Categories=Utility;Office;
@@ -153,7 +180,7 @@ fi
 
 echo "      Desktop shortcut : $DESKTOP_SHORTCUT"
 
-# ── STEP 6b: Create App Menu entry ───────────────────────────
+# ── STEP 7b: Create App Menu entry ───────────────────────────
 mkdir -p "$APPMENU_DIR"
 
 cat > "$APPMENU_FILE" << APPMENU_EOF
@@ -163,7 +190,7 @@ Type=Application
 Name=Teleprompter
 GenericName=Teleprompter
 Comment=CAEDM Teleprompter — maximized window
-Exec=bash -c '$LAUNCH_EXEC'
+Exec=bash -c '$LAUNCHER_SCRIPT'
 Icon=$ICON_FILE
 Terminal=false
 Categories=Utility;Office;
@@ -173,7 +200,7 @@ APPMENU_EOF
 chmod +x "$APPMENU_FILE"
 echo "      App Menu entry   : $APPMENU_FILE"
 
-# ── STEP 6c: Remove any leftover autostart entry ──────────────
+# ── STEP 7c: Remove any leftover autostart entry ──────────────
 if [ -f "$AUTOSTART_FILE" ]; then
     rm -f "$AUTOSTART_FILE"
     echo "      Removed old autostart entry: $AUTOSTART_FILE"
