@@ -1,4 +1,4 @@
-# 📜 Changelog & Release Notes
+# 📜 Release Notes
 
 All notable changes to the Teleprompter project will be documented in this file.
 
@@ -11,7 +11,7 @@ All notable changes to the Teleprompter project will be documented in this file.
 - **Dedicated Chromium Profile:** The app now runs in a completely isolated profile (`~/.teleprompter-chrome-profile`) ensuring personal browsing data and teleprompter data never mix.
 - **Robust Launch Script:** Added `launch-teleprompter.sh` which automatically purges stale browser locks (`SingletonLock`, `SingletonSocket`, `SingletonCookie`, `Preferences.lock`) prior to launch.
 - **Crash Prevention:** Completely eliminated the Chromium "Restore Session" crash prompts that can occur in kiosk-style environments after a hard reboot or force close.
-- **Root Repository Documentation:** Added a professional `README.md` and this `CHANGELOG.md` for better repository structure.
+- **Root Repository Documentation:** Added a professional `README.md` and this `RELEASE_NOTES.md` for better repository structure.
 
 ### Changed
 - `uninstall.sh` was updated to cleanly wipe the new isolated profile.
