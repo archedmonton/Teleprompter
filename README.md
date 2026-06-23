@@ -89,9 +89,12 @@ Hardware presentation clickers or standard keyboards can be used to control the 
 *Developer, Communications*  
 The Catholic Archdiocese of Edmonton  
 📧 [ruban.peppin@caedm.ca](mailto:ruban.peppin@caedm.ca)  
+
+**Alan Schietzsch**
+*Webmaster, Communications*
 📧 [webmaster@caedm.ca](mailto:webmaster@caedm.ca)
 
-> *For bug reports, feature requests, or support, please contact the developer directly.*
+> *For bug reports, feature requests, or support, please contact the developer or webmaster directly.*
 
 ---
 
