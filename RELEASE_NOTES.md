@@ -4,6 +4,16 @@ All notable changes to the Teleprompter project will be documented in this file.
 
 ---
 
+## [v3.2.0] - 2026-06-23
+**Status:** 🟢 Stable / Production Ready
+
+### Changed
+- **Standalone App Mode:** The launch script now uses the Chromium `--app` flag, hiding all browser tabs, bookmarks, and the omnibox to make the Teleprompter feel like a truly native desktop application.
+- **Robust Relaunching:** The launcher script (`launch-teleprompter.sh`) now executes `pkill -f` specifically targeted at the teleprompter profile. This ensures that any zombie processes from a previous closed session are wiped out before relaunching, fixing issues where the app wouldn't open a second time.
+- **Desktop Execution Fixes:** The generated `.desktop` files were updated to use `/bin/bash -lc` and `StartupNotify=true` to comply with stricter Raspberry Pi OS execute prompt policies.
+
+---
+
 ## [v3.1.0] - 2026-06-18
 **Status:** 🟢 Stable / Production Ready
 

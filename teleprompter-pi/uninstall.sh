@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================
-#  Teleprompter — Raspberry Pi Uninstaller  v3.1
+#  Teleprompter — Raspberry Pi Uninstaller  v3.2
 #  The Catholic Archdiocese of Edmonton — Communications
 #  Author : Ruban Peppin <ruban.peppin@caedm.ca>
 #
@@ -27,7 +27,7 @@ echo ""
 echo "============================================="
 echo "  Teleprompter Uninstaller for Raspberry Pi"
 echo "  The Catholic Archdiocese of Edmonton"
-echo "  v3.1"
+echo "  v3.2"
 echo "============================================="
 echo ""
 

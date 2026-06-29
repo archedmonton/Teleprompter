@@ -1,6 +1,6 @@
 =====================================================
   TELEPROMPTER — Raspberry Pi Setup Guide
-  v3.1
+  v3.2
 =====================================================
 
   Organization : The Catholic Archdiocese of Edmonton
@@ -18,6 +18,15 @@
 =====================================================
   VERSION HISTORY
 =====================================================
+
+  v3.2.0  2026-06-23
+    - Changed Chromium to launch in App Mode (--app) to
+      hide all browser UI elements (tabs, omnibox).
+    - launch-teleprompter.sh now actively kills any existing
+      Teleprompter processes before launch to ensure robust
+      restarts.
+    - Updated .desktop files to use /bin/bash -lc and 
+      StartupNotify=true to fix OS execution prompts.
 
   v3.1.0  2026-06-17
     - Added dedicated Chromium profile for stability
@@ -90,8 +99,8 @@ FOLDER CONTENTS
 
   teleprompter.html        The teleprompter web app (v1.2)
   teleprompter-icon.svg    Application icon (dark, burgundy accent)
-  install.sh               Raspberry Pi installer (v3.1)
-  uninstall.sh             Raspberry Pi uninstaller (v3.1)
+  install.sh               Raspberry Pi installer (v3.2)
+  uninstall.sh             Raspberry Pi uninstaller (v3.2)
   README.txt               This file
 
 
@@ -119,11 +128,18 @@ WHAT THE INSTALLER CREATES
 
 
 -----------------------------------------------------
-HOW FULLSCREEN WORKS
+HOW TO OPEN & FULLSCREEN BEHAVIOR
 -----------------------------------------------------
 
-  This installer does NOT use Chromium's --kiosk flag.
-  Chromium opens as a normal maximized window.
+  This installer configures the Teleprompter to feel
+  like a native desktop application. It uses Chromium's
+  --app flag to remove browser tabs and menus.
+
+  Open the app manually by:
+  - Double-clicking the Desktop icon
+  - Or using the Application Menu (under Utilities/Office)
+
+  The app does NOT start automatically on boot.
 
   Fullscreen is controlled entirely from inside
   the Teleprompter app using the on-screen buttons:
@@ -192,20 +208,19 @@ The installer will print 7 numbered steps:
 
 
 -----------------------------------------------------
-STEP 4 — TRUST THE DESKTOP ICON (if prompted)
+STEP 4 — FIRST LAUNCH & PERMISSIONS
 -----------------------------------------------------
 
-Raspberry Pi OS Bookworm may show the desktop icon
-as untrusted. The installer automatically tries to
-trust it using the "gio" tool.
+Raspberry Pi OS may show a security prompt asking what
+to do with the Teleprompter.desktop file.
 
-If the icon shows a warning or won't open:
-
+If prompted:
   a) Right-click the Desktop icon.
   b) Choose "Allow Launching" or "Trust this executable".
-  c) Double-click to open — it should work now.
+  c) Double-click to open.
 
-This is a one-time step per installation.
+You only need to do this once. The icon should now
+launch cleanly every time.
 
 
 -----------------------------------------------------

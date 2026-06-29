@@ -1,6 +1,6 @@
 #!/bin/bash
 # =============================================================
-#  Teleprompter — Raspberry Pi Installer  v3.1
+#  Teleprompter — Raspberry Pi Installer  v3.2
 #  The Catholic Archdiocese of Edmonton — Communications
 #  Author : Ruban Peppin <ruban.peppin@caedm.ca>
 #
@@ -44,7 +44,7 @@ echo ""
 echo "============================================="
 echo "  Teleprompter Installer for Raspberry Pi"
 echo "  The Catholic Archdiocese of Edmonton"
-echo "  v3.1 — clean profile, windowed mode, no autostart"
+echo "  v3.2 — standalone app mode, robust relaunch"
 echo "============================================="
 echo ""
 
@@ -128,13 +128,16 @@ cat > "$LAUNCHER_SCRIPT" << LAUNCH_EOF
 
 PROFILE_DIR="\$HOME/.teleprompter-chrome-profile"
 
+# Kill any lingering Teleprompter Chromium processes to ensure clean launch
+pkill -f "\.teleprompter-chrome-profile" 2>/dev/null || true
+
 # Clean stale lock files to prevent "Restore Session" crash prompts
 rm -f "\$PROFILE_DIR/SingletonLock"
 rm -f "\$PROFILE_DIR/SingletonSocket"
 rm -f "\$PROFILE_DIR/SingletonCookie"
 rm -f "\$PROFILE_DIR/Default/Preferences.lock"
 
-# Launch Chromium cleanly
+# Launch Chromium cleanly in app mode
 exec "$CHROMIUM_CMD" \\
   --user-data-dir="\$PROFILE_DIR" \\
   --start-maximized \\
@@ -143,7 +146,7 @@ exec "$CHROMIUM_CMD" \\
   --disable-infobars \\
   --noerrdialogs \\
   --disable-restore-session-state \\
-  "$FILE_URL"
+  --app="$FILE_URL"
 LAUNCH_EOF
 
 chmod +x "$LAUNCHER_SCRIPT"
@@ -159,12 +162,12 @@ Version=1.0
 Type=Application
 Name=Teleprompter
 GenericName=Teleprompter
-Comment=CAEDM Teleprompter — maximized window
-Exec=bash -c '$LAUNCHER_SCRIPT'
+Comment=Offline Teleprompter
+Exec=/bin/bash -lc '$LAUNCHER_SCRIPT'
 Icon=$ICON_FILE
 Terminal=false
-Categories=Utility;Office;
-StartupNotify=false
+Categories=Office;Utility;
+StartupNotify=true
 DESK_EOF
 
 chmod +x "$DESKTOP_SHORTCUT"
@@ -189,12 +192,12 @@ Version=1.0
 Type=Application
 Name=Teleprompter
 GenericName=Teleprompter
-Comment=CAEDM Teleprompter — maximized window
-Exec=bash -c '$LAUNCHER_SCRIPT'
+Comment=Offline Teleprompter
+Exec=/bin/bash -lc '$LAUNCHER_SCRIPT'
 Icon=$ICON_FILE
 Terminal=false
-Categories=Utility;Office;
-StartupNotify=false
+Categories=Office;Utility;
+StartupNotify=true
 APPMENU_EOF
 
 chmod +x "$APPMENU_FILE"
@@ -230,7 +233,7 @@ echo "  App files      : $INSTALL_DIR"
 echo "  Desktop icon   : $DESKTOP_SHORTCUT"
 echo "  App Menu entry : $APPMENU_FILE"
 echo "  Chromium cmd   : $CHROMIUM_CMD"
-echo "  Launch mode    : Maximized window (no kiosk)"
+echo "  Launch mode    : Standalone App Window (--app)"
 echo "  Autostart      : DISABLED"
 echo ""
 echo "  ► Double-click the Desktop icon to open."

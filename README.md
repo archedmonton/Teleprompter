@@ -1,6 +1,6 @@
 # 🎙️ Teleprompter
 
-[![Version](https://img.shields.io/badge/version-3.1.0-blue.svg)](RELEASE_NOTES.md)
+[![Version](https://img.shields.io/badge/version-3.2.0-blue.svg)](RELEASE_NOTES.md)
 [![Release Notes](https://img.shields.io/badge/Release%20Notes-View%20Release%20Notes-orange.svg)](RELEASE_NOTES.md)
 [![Platform](https://img.shields.io/badge/platform-Web%20%7C%20Windows%20%7C%20Raspberry%20Pi-lightgrey.svg)](https://github.com/archedmonton/Teleprompter)
 [![ES5 Compatible](https://img.shields.io/badge/ES5-Compatible-brightgreen.svg)](https://github.com/archedmonton/Teleprompter)
